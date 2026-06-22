@@ -9,7 +9,6 @@ class SimpleBacklinkCreate
     private $results = [];
     private $anchorText = null;
     private $strategy = 'page_template';
-
     private $rel = 'nofollow';
     private $targetBlank = false;
 
