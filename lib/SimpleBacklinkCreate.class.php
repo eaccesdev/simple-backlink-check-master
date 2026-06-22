@@ -152,10 +152,10 @@ class SimpleBacklinkCreate
         }
 
         $host = parse_url($this->target, PHP_URL_HOST);
-        $host = $host ? strtolower($host) : 'your site';
+        $host = $host ? strtolower($host) : '';
 
         // Strip only leading www.
-        if (strpos($host, 'www.') === 0) {
+        if ($host !== '' && strpos($host, 'www.') === 0) {
             $host = substr($host, 4);
         }
 
@@ -167,40 +167,35 @@ class SimpleBacklinkCreate
         $href = htmlspecialchars($target, ENT_QUOTES, 'UTF-8');
         $aText = htmlspecialchars($anchor, ENT_QUOTES, 'UTF-8');
 
-        $relAttr = '';
+        // rel handling: dofollow => omit rel entirely unless targetBlank requires noopener/noreferrer
+        $baseRel = '';
         if ($this->rel === 'dofollow') {
-            $relAttr = ''; // omit rel for default dofollow
+            $baseRel = '';
         } elseif ($this->rel === '' || $this->rel === 'nofollow') {
-            $relAttr = ' rel="nofollow"';
+            $baseRel = 'nofollow';
         } else {
-            // sponsored / ugc etc.
-            $relAttr = ' rel="' . htmlspecialchars($this->rel, ENT_QUOTES, 'UTF-8') . '"';
+            $baseRel = $this->rel; // sponsored / ugc / ...
         }
 
         $targetAttr = '';
-        $noopener = ' rel="' . htmlspecialchars(trim($this->rel) ?: 'nofollow', ENT_QUOTES, 'UTF-8') . '"';
-        if ($this->targetBlank) {
-            // If target blank, add noopener/noreferrer; keep rel already handled above where possible
-            $targetAttr = ' target="_blank"';
-            if ($relAttr === '') {
-                // If rel omitted (dofollow), still add noopener/noreferrer without overriding rel semantics
-                $noopener = ' rel="nofollow noopener noreferrer"';
-            } else {
-                $relVal = $this->rel;
-                if ($relVal === 'dofollow') {
-                    $noopener = ' rel="noopener noreferrer"';
-                } else {
-                    // Append noopener/noreferrer to existing rel
-                    $noopener = ' rel="' . $relVal . ' noopener noreferrer"';
-                }
-            }
-        }
+        $relTokens = [];
 
         if ($this->targetBlank) {
-            $snippet = '<a href="' . $href . '"' . $targetAttr . $noopener . '>' . $aText . '</a>';
-        } else {
-            $snippet = '<a href="' . $href . '"' . $relAttr . '>' . $aText . '</a>';
+            $targetAttr = ' target="_blank"';
+            $relTokens[] = 'noopener';
+            $relTokens[] = 'noreferrer';
         }
+
+        if ($baseRel !== '') {
+            $relTokens = array_merge([$baseRel], $relTokens);
+        }
+
+        $relAttr = '';
+        if (!empty($relTokens)) {
+            $relAttr = ' rel="' . htmlspecialchars(implode(' ', $relTokens), ENT_QUOTES, 'UTF-8') . '"';
+        }
+
+        $snippet = '<a href="' . $href . '"' . $targetAttr . $relAttr . '>' . $aText . '</a>';
 
         if ($this->strategy === 'html_snippet') {
             return $snippet;
@@ -213,7 +208,7 @@ class SimpleBacklinkCreate
             '<title>Backlink</title>' .
             '</head>' .
             '<body>' .
-            '<p>Example backlink:</p>' .
+            '<p>Backlink:</p>' .
             '<p>' . $snippet . '</p>' .
             '<!-- Source URL (for reference): ' . htmlspecialchars($sourceUrl, ENT_QUOTES, 'UTF-8') . ' -->' .
             '</body>' .
