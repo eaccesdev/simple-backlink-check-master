@@ -1,0 +1,10 @@
+- [ ] Step 1: Update `index.html` UI (rename button to “Create Backlinks”) and add mode=create + adjust label/placeholder text.
+- [ ] Step 2: Update `process.php` to branch by mode (create vs check) and render appropriate output.
+- [ ] Step 3: Create `lib/SimpleBacklinkCreate.class.php` to generate backlink snippets/pages from inputs.
+- [x] Step 4: Implement bulk output rendering (including optional ZIP download for hundreds).
+- [ ] Step 5: Run thorough testing:
+  - Frontend interaction + full form flow
+  - Backend create/check routing via HTTP/curl
+  - Edge cases (invalid URLs, empty lines, long URLs)
+  - Basic security sanity (HTML escaping/injection)
+- [ ] Step 6: After implementation, provide 10 ideas to improve the simple backlink creator.

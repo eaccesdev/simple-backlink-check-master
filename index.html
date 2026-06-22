@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Backlink Maker + Dork Generator</title>
+  <style>
+    /* Your original beautiful styles + extra for dork section */
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f3ff;
+      --bg-2: #eef7ff;
+      --card: rgba(255, 255, 255, 0.82);
+      --text: #171426;
+      --muted: #6f6a80;
+      --line: rgba(91, 65, 135, 0.16);
+      --primary: #7c3aed;
+      --primary-2: #ec4899;
+      --primary-dark: #5b21b6;
+      --shadow: 0 24px 80px rgba(65, 45, 100, 0.16);
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top left, rgba(236, 72, 153, 0.20), transparent 30rem),
+                  radial-gradient(circle at top right, rgba(124, 58, 237, 0.22), transparent 34rem),
+                  linear-gradient(135deg, var(--bg), var(--bg-2));
+    }
+    main { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 40px 0 32px; }
+    .card { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(18px); }
+    .card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 5px; background: linear-gradient(90deg, var(--primary), var(--primary-2)); }
+    form { padding: clamp(24px, 4vw, 44px); }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 22px; }
+    label { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 10px; color: #2b2440; font-size: 14px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; }
+    .hint { color: var(--muted); font-size: 13px; font-weight: 600; text-transform: none; letter-spacing: 0; }
+    input, textarea { width: 100%; border: 1px solid rgba(91, 65, 135, 0.20); border-radius: 18px; background: rgba(255, 255, 255, 0.76); color: var(--text); font: inherit; outline: none; }
+    input { height: 58px; padding: 0 18px; }
+    textarea { min-height: 160px; padding: 18px; resize: vertical; line-height: 1.6; }
+    input:focus, textarea:focus { border-color: rgba(124, 58, 237, 0.72); box-shadow: 0 0 0 5px rgba(124, 58, 237, 0.12); }
+    button { appearance: none; border: 0; border-radius: 999px; background: linear-gradient(90deg, var(--primary), var(--primary-2)); color: white; cursor: pointer; font: inherit; font-weight: 900; padding: 15px 24px; box-shadow: 0 16px 35px rgba(124, 58, 237, 0.28); }
+    button:hover { transform: translateY(-1px); box-shadow: 0 20px 45px rgba(124, 58, 237, 0.34); }
+    .actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 20px; }
+    .section { margin-bottom: 40px; }
+    .dork-output { font-family: ui-monospace, monospace; font-size: 13px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- === DORK GENERATOR SECTION === -->
+    <section class="section card">
+      <form onsubmit="event.preventDefault(); generateDorks();">
+        <div style="padding: clamp(24px, 4vw, 44px);">
+          <h2 style="margin-top:0; color:var(--primary-dark);">1. Generate Backlink Opportunities (Dorks)</h2>
+          
+          <label>Target Websites (one per line)<span class="hint">Your sites that need backlinks</span></label>
+          <textarea id="targets" placeholder="https://yoursite.com&#10;https://anothersite.com" rows="4"></textarea>
+
+          <label>Niche / Keyword<span class="hint">Makes dorks much more relevant</span></label>
+          <input type="text" id="niche" placeholder="e.g. fitness, yoga mats, keto recipes, digital marketing" value="">
+
+          <div class="actions">
+            <button type="button" onclick="generateDorks()">🚀 Generate Thousands of Opportunities</button>
+            <button type="button" onclick="exportCSV()" style="background:#10b981;">📥 Export CSV</button>
+          </div>
+
+          <textarea id="dorkOutput" class="dork-output" readonly style="margin-top:16px; min-height:220px;" placeholder="Dork results will appear here..."></textarea>
+        </div>
+      </form>
+    </section>
+
+    <!-- === YOUR ORIGINAL CREATOR FORM === -->
+    <section class="card">
+      <form method="post" action="process.php" id="backlink-form">
+        <input type="hidden" name="mode" value="create">
+        <div style="padding: clamp(24px, 4vw, 44px);">
+          <h2 style="margin-top:0; color:var(--primary-dark);">2. Create Backlinks</h2>
+          
+          <div class="grid">
+            <div>
+              <label for="target">Target URL <span class="hint">The destination of the backlinks</span></label>
+              <input id="target" name="target" type="url" placeholder="https://example.com" required>
+            </div>
+
+            <div>
+              <label for="urls">Backlink Sites / Pages <span class="hint">Paste opportunities from above (one per line)</span></label>
+              <textarea id="urls" name="urls" placeholder="Paste dork-generated URLs here..." required></textarea>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="submit">Create Backlinks (HTML Snippets)</button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    // Dork Generator Logic
+    const baseDorkTemplates = [
+      '"write for us" OR "guest post" OR "guest article" OR "submit guest post"',
+      'inurl:guest-post OR inurl:write-for-us OR inurl:contribute',
+      'intitle:"directory" OR "add url" OR "submit site"',
+      '"profile" OR "register" OR "signup" "add link"',
+      '"resources" OR "useful links" OR "partners"'
+    ];
+
+    function generateDorks() {
+      const targetsInput = document.getElementById('targets').value.trim();
+      const niche = document.getElementById('niche').value.trim() || 'general';
+
+      if (!targetsInput) {
+        alert("Enter at least one target website.");
+        return;
+      }
+
+      const targets = targetsInput.split('\n').map(t => t.trim()).filter(Boolean);
+      let output = `Generated on ${new Date().toLocaleString()} | Niche: ${niche}\n\n`;
+
+      let total = 0;
+
+      targets.forEach(target => {
+        output += `=== Opportunities for ${target} ===\n\n`;
+        baseDorkTemplates.forEach(template => {
+          const variations = [
+            `${template} ${niche}`,
+            `${template} ${target}`,
+            `"${target}" ${template}`,
+            `${niche} ${template}`
+          ];
+          variations.forEach(v => {
+            output += `• ${v}\n`;
+            total++;
+          });
+        });
+        output += `\n`;
+      });
+
+      output += `\nTotal generated: ${total}`;
+      document.getElementById('dorkOutput').value = output;
+    }
+
+    function exportCSV() {
+      const text = document.getElementById('dorkOutput').value;
+      if (!text) { alert("Generate first!"); return; }
+
+      let csv = "Dork,Niche\n";
+      text.split('\n').forEach(line => {
+        if (line.includes('• ')) {
+          csv += `"${line.replace('• ', '').trim()}",${document.getElementById('niche').value || 'general'}\n`;
+        }
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backlink_dorks_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+    }
+
+    // Keep your original form validation
+    const form = document.querySelector('#backlink-form');
+    form.addEventListener('submit', () => {
+      const urls = document.getElementById('urls').value.trim();
+      if (!urls) {
+        alert('Add at least one URL for backlink creation.');
+      }
+    });
+  </script>
+</body>
+</html>
